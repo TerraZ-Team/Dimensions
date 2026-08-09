@@ -207,7 +207,7 @@ class TerrariaServerPacketHandler {
    * has not fully connected to any Dimension yet.
    *
    * @param packet The disconnect packet
-   * @return Whether or not this packet was handled (and should not be sent)
+   * @return Whether or not the packet was handled (and should not be sent)
    */
   private handleDisconnect(disconnect: DisconnectPacket.t): boolean {
     const client = this.currentServer.client;
@@ -434,7 +434,7 @@ class TerrariaServerPacketHandler {
    * Tracks whether an NPC is alive or not, so it can be cleared when the player switches Dimensions
    *
    * @param packet The NPC Update
-   * @return Whether or not the packet has been handled (and is not to be sent)
+   * @return Whether or not the packet has been handled (and should not be sent)
    */
   private handleNPCUpdate(npcUpdate: NpcUpdatePacket.t): boolean {
     const { npcSlotId, npcTypeId, life } = npcUpdate;
@@ -478,7 +478,7 @@ class TerrariaServerPacketHandler {
    * Tracks which players are active so they can be cleared when a player switches Dimensions
    *
    * @param packet The player active packet
-   * @return Whether or not this packet was handled (and should not be sent)
+   * @return Whether or not the packet has been handled (and should not be sent)
    */
   private handlePlayerActive(playerActive: PlayerActivePacket.t): boolean {
     let player: Player | undefined = undefined;
@@ -515,8 +515,12 @@ class TerrariaServerPacketHandler {
   }
 
   private handlePlayerInfo(playerInfo: PlayerInfoPacket.t, rawPacket: RawPacket): boolean {
-    const nameMismatchesRequireRewrite = this.currentServer.client.options.nameChanges?.mode === "rewrite";
     const isAboutCurrentClient = playerInfo.playerId === this.currentServer.client.player.id;
+    if (isAboutCurrentClient) {
+      this.currentServer.client.player.difficulty = playerInfo.difficulty;
+    }
+
+    const nameMismatchesRequireRewrite = this.currentServer.client.options.nameChanges?.mode === "rewrite";
     const isMismatchedName = this.currentServer.client.player.name !== playerInfo.name;
     const isAllowedToRename = (this.currentServer.client.options.nameChanges?.exclusions.indexOf(this.currentServer.name) ?? -1) > -1;
     if (nameMismatchesRequireRewrite && isAboutCurrentClient && isMismatchedName) {
